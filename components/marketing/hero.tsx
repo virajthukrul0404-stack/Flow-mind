@@ -25,7 +25,7 @@ export function HeroSection() {
               style={{ animationDelay: "100ms" }}
             >
               FlowMind AI helps you capture tasks, set goals, and get things done with a daily command
-              center powered by GPT-4o.
+              center powered by Groq.
             </p>
           </div>
           <div className="flex flex-col gap-4 sm:flex-row">

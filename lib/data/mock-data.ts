@@ -148,7 +148,7 @@ export const pricingPlans: PricingPlan[] = [
     description: "For solo operators who want FlowMind deeply involved in their week.",
     features: [
       "Unlimited tasks",
-      "GPT-4o AI chat",
+      "Groq AI chat",
       "Unlimited goals",
       "Calendar sync",
       "Daily briefings",
@@ -212,7 +212,7 @@ export const faqItems: FaqItem[] = [
       "No. Billing endpoints gracefully fall back to demo responses until live Stripe keys are added."
   },
   {
-    question: "What happens if OpenAI keys are missing?",
+    question: "What happens if Groq keys are missing?",
     answer:
       "The app falls back to deterministic demo responses so the experience still works locally while you wire in production keys."
   }

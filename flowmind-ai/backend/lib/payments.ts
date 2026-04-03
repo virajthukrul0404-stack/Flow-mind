@@ -13,7 +13,7 @@ export const PLAN_CATALOG: Record<
 > = {
   PRO: {
     name: "Pro",
-    description: "Unlimited tasks, GPT-4o chat, calendar sync, and daily briefings.",
+    description: "Unlimited tasks, Groq AI chat, calendar sync, and daily briefings.",
     monthly: { usd: 12, inr: 999 },
     annual: { usd: 10, inr: 799 }
   },

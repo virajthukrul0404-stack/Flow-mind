@@ -14,7 +14,7 @@ export default function AIChatPage() {
       <ComingSoonCard
         badge="AI disabled"
         description="The AI workspace is hidden until your production AI keys are added and verified."
-        details="Keep the code as-is, add your OpenAI key later, then set NEXT_PUBLIC_ENABLE_AI=true to turn the whole section back on."
+        details="Keep the code as-is, add your Groq key later, then set NEXT_PUBLIC_ENABLE_AI=true to turn the whole section back on."
         title="AI chat is coming soon"
       />
     );

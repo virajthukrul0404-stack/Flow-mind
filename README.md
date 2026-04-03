@@ -35,7 +35,7 @@
 
 ## ✦ What is FlowMind AI?
 
-FlowMind AI is a **next-generation productivity operating system** powered by GPT-4o. It replaces the scattered stack of task managers, calendars, and goal trackers with a single, AI-native command center that thinks alongside you — every morning, every week, every sprint.
+FlowMind AI is a **next-generation productivity operating system** powered by Groq. It replaces the scattered stack of task managers, calendars, and goal trackers with a single, AI-native command center that thinks alongside you — every morning, every week, every sprint.
 
 It doesn't just store your tasks. It **prioritizes your day**, **protects your focus blocks**, and **coaches you toward your goals** with context-aware intelligence baked into every view.
 
@@ -66,7 +66,7 @@ Break long-horizon goals into daily micro-actions. The AI coach surfaces the rig
 Pomodoro sessions calibrated to your real calendar and current energy level. FlowMind protects 90-minute deep work sprints before you even ask.
 
 ### ☼ Daily Briefing
-Every morning, a GPT-4o–generated briefing lands in your dashboard — your top priorities ranked, your calendar protected, and a coaching nudge to front-load the creative work.
+Every morning, a Groq-generated briefing lands in your dashboard — your top priorities ranked, your calendar protected, and a coaching nudge to front-load the creative work.
 
 ### ↗ Calendar Intelligence
 Sync Google Calendar or Outlook. FlowMind reads your schedule and automatically carves out focus blocks around your meetings, not between them.
@@ -86,7 +86,7 @@ A structured retrospective that shows what you finished, what slipped, and exact
 | Animation | Framer Motion | Scroll reveals, page transitions, micro-interactions |
 | State | Zustand + persist middleware | Tasks, goals, timer — synced to localStorage |
 | Auth | Firebase (Google OAuth) | Secure, single-click sign-in |
-| AI | OpenAI GPT-4o | Briefings, coaching, task parsing |
+| AI | Groq | Briefings, coaching, task parsing |
 | Deployment | Vercel | Edge-optimized, zero-config CI/CD |
 
 <br />
@@ -196,8 +196,10 @@ open http://localhost:3000
 ### Environment Variables
 
 ```env
-# OpenAI — for AI briefings and task coaching
-OPENAI_API_KEY=sk-...
+# Groq — for AI briefings and task coaching
+GROQ_API_KEY=gsk-...
+GROQ_MODEL=llama-3.3-70b-versatile
+GROQ_BASE_URL=https://api.groq.com/openai/v1
 
 # Firebase — for Google OAuth
 NEXT_PUBLIC_FIREBASE_API_KEY=...
@@ -264,7 +266,7 @@ Every push to `main` triggers an automatic production deployment. Preview deploy
 - [x] AI Task Manager with natural-language capture
 - [x] Smart Goal Tracker with progress coaching
 - [x] Focus Timer (Pomodoro) with calendar awareness
-- [x] Daily AI Briefing powered by GPT-4o
+- [x] Daily AI Briefing powered by Groq
 - [x] Calendar Intelligence (Google + Outlook sync)
 - [x] Weekly Review with retrospective analytics
 - [ ] Voice input for task capture

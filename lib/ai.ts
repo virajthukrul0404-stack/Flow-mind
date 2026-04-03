@@ -1,5 +1,4 @@
 import { addDays, nextFriday, nextMonday, startOfHour } from "date-fns";
-import OpenAI from "openai";
 
 import type { ChatMessage, Goal, Task, TaskPriority } from "@/lib/types";
 
@@ -19,6 +18,14 @@ Break this goal into 5-7 specific, actionable milestones.
 Return JSON array: [{ title, order, estimatedDays }]
 `;
 
+type GroqChatCompletionResponse = {
+  choices?: Array<{
+    message?: {
+      content?: string;
+    };
+  }>;
+};
+
 function getAiConfig() {
   const apiKey = process.env.GROQ_API_KEY;
 
@@ -26,19 +33,14 @@ function getAiConfig() {
     return null;
   }
 
-  const baseURL = process.env.GROQ_BASE_URL || "https://api.groq.com/openai/v1";
-  const model = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
-
-  return { apiKey, baseURL, model };
+  return {
+    apiKey,
+    baseURL: (process.env.GROQ_BASE_URL || "https://api.groq.com/openai/v1").replace(/\/$/, ""),
+    model: process.env.GROQ_MODEL || "llama-3.3-70b-versatile"
+  };
 }
 
 const aiConfig = getAiConfig();
-const openai = aiConfig
-  ? new OpenAI({
-      apiKey: aiConfig.apiKey,
-      ...(aiConfig.baseURL ? { baseURL: aiConfig.baseURL } : {})
-    })
-  : null;
 
 export function buildSystemPrompt(userContext: {
   tasks: Task[];
@@ -165,31 +167,44 @@ export function prioritizeTasks(tasks: Task[]) {
 export async function generateChatResponse(messages: ChatMessage[], userContext: { tasks: Task[]; goals: Goal[] }) {
   const latestUserMessage = [...messages].reverse().find((message) => message.role === "user");
 
-  if (!openai) {
-    return `Here’s the move: start with ${userContext.tasks[0]?.title ?? "your most urgent task"} for 45 focused minutes, then clear one small admin task to build momentum. Your most important longer-term bet is ${userContext.goals[0]?.title ?? "your top goal"}, so protect a second block for that before the day ends.`;
+  if (!aiConfig) {
+    return `Here's the move: start with ${userContext.tasks[0]?.title ?? "your most urgent task"} for 45 focused minutes, then clear one small admin task to build momentum. Your most important longer-term bet is ${userContext.goals[0]?.title ?? "your top goal"}, so protect a second block for that before the day ends.`;
   }
 
   try {
-    const completion = await openai.chat.completions.create({
-      model: aiConfig?.model || "gpt-4o",
-      messages: [
-        {
-          role: "system",
-          content: buildSystemPrompt({ tasks: userContext.tasks, goals: userContext.goals, meetings: 2 })
-        },
-        ...messages.map((message) => ({
-          role: message.role,
-          content: message.content
-        })),
-        {
-          role: "user",
-          content: latestUserMessage?.content || "Plan my day"
-        }
-      ],
-      max_tokens: 400
+    const response = await fetch(`${aiConfig.baseURL}/chat/completions`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${aiConfig.apiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: aiConfig.model,
+        messages: [
+          {
+            role: "system",
+            content: buildSystemPrompt({ tasks: userContext.tasks, goals: userContext.goals, meetings: 2 })
+          },
+          ...messages.map((message) => ({
+            role: message.role,
+            content: message.content
+          })),
+          {
+            role: "user",
+            content: latestUserMessage?.content || "Plan my day"
+          }
+        ],
+        max_tokens: 400
+      })
     });
 
-    return completion.choices[0]?.message?.content || "Let's make the next hour count.";
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Groq request failed with ${response.status}: ${errorText.slice(0, 300)}`);
+    }
+
+    const completion = (await response.json()) as GroqChatCompletionResponse;
+    return completion.choices?.[0]?.message?.content || "Let's make the next hour count.";
   } catch (error) {
     console.error("AI chat request failed; using fallback response.", error);
     return `I couldn't reach the AI provider right now, so here's a quick plan: start with ${

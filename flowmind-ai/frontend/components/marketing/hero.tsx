@@ -35,7 +35,7 @@ export function HeroSection() {
             </h1>
             <p className="max-w-2xl text-lg leading-8 text-slate-600">
               FlowMind AI helps you capture tasks, set goals, and get things done with a daily command
-              center powered by GPT-4o.
+              center powered by Groq.
             </p>
           </div>
           <div className="flex flex-col gap-4 sm:flex-row">
