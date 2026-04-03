@@ -19,8 +19,29 @@ Break this goal into 5-7 specific, actionable milestones.
 Return JSON array: [{ title, order, estimatedDays }]
 `;
 
-const openai = process.env.OPENAI_API_KEY
-  ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+function getAiConfig() {
+  const explicitGroqKey = process.env.GROQ_API_KEY;
+  const sharedKey = process.env.OPENAI_API_KEY;
+  const apiKey = explicitGroqKey || sharedKey;
+
+  if (!apiKey) {
+    return null;
+  }
+
+  const keyLooksLikeGroq = apiKey.startsWith("gsk_");
+  const baseURL = process.env.OPENAI_BASE_URL || (keyLooksLikeGroq ? "https://api.groq.com/openai/v1" : undefined);
+  const model =
+    process.env.OPENAI_MODEL || (keyLooksLikeGroq ? "llama-3.3-70b-versatile" : "gpt-4o");
+
+  return { apiKey, baseURL, model };
+}
+
+const aiConfig = getAiConfig();
+const openai = aiConfig
+  ? new OpenAI({
+      apiKey: aiConfig.apiKey,
+      ...(aiConfig.baseURL ? { baseURL: aiConfig.baseURL } : {})
+    })
   : null;
 
 export function buildSystemPrompt(userContext: {
@@ -152,26 +173,35 @@ export async function generateChatResponse(messages: ChatMessage[], userContext:
     return `Here’s the move: start with ${userContext.tasks[0]?.title ?? "your most urgent task"} for 45 focused minutes, then clear one small admin task to build momentum. Your most important longer-term bet is ${userContext.goals[0]?.title ?? "your top goal"}, so protect a second block for that before the day ends.`;
   }
 
-  const completion = await openai.chat.completions.create({
-    model: "gpt-4o",
-    messages: [
-      {
-        role: "system",
-        content: buildSystemPrompt({ tasks: userContext.tasks, goals: userContext.goals, meetings: 2 })
-      },
-      ...messages.map((message) => ({
-        role: message.role,
-        content: message.content
-      })),
-      {
-        role: "user",
-        content: latestUserMessage?.content || "Plan my day"
-      }
-    ],
-    max_tokens: 400
-  });
+  try {
+    const completion = await openai.chat.completions.create({
+      model: aiConfig?.model || "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: buildSystemPrompt({ tasks: userContext.tasks, goals: userContext.goals, meetings: 2 })
+        },
+        ...messages.map((message) => ({
+          role: message.role,
+          content: message.content
+        })),
+        {
+          role: "user",
+          content: latestUserMessage?.content || "Plan my day"
+        }
+      ],
+      max_tokens: 400
+    });
 
-  return completion.choices[0]?.message?.content || "Let's make the next hour count.";
+    return completion.choices[0]?.message?.content || "Let's make the next hour count.";
+  } catch (error) {
+    console.error("AI chat request failed; using fallback response.", error);
+    return `I couldn't reach the AI provider right now, so here's a quick plan: start with ${
+      userContext.tasks[0]?.title ?? "your top task"
+    } for 45 minutes, then complete one smaller admin task, and block 30 minutes for ${
+      userContext.goals[0]?.title ?? "your top goal"
+    }.`;
+  }
 }
 
 export async function* streamChatResponse(

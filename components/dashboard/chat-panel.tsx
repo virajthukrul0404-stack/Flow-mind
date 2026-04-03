@@ -80,6 +80,12 @@ export function ChatPanel() {
         })
       });
 
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+        const message = payload?.error || "AI chat is unavailable right now. Please try again.";
+        throw new Error(message);
+      }
+
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
 
@@ -105,6 +111,19 @@ export function ChatPanel() {
           );
         }
       }
+    } catch (error) {
+      const errorText = error instanceof Error ? error.message : "AI chat failed unexpectedly.";
+      setMessages((current) =>
+        current.map((message) =>
+          message.id === assistantId
+            ? {
+                ...message,
+                content: errorText,
+                actions: ["Try Again"]
+              }
+            : message
+        )
+      );
     } finally {
       setLoading(false);
     }
