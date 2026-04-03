@@ -1,139 +1,190 @@
-import dynamic from "next/dynamic";
-import { CalendarDays, Sparkles, Target } from "lucide-react";
+"use client";
 
-import { ComingSoonCard } from "@/components/shared/section-heading";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { goals, tasks } from "@/lib/data/mock-data";
-import { generateFallbackBriefing } from "@/lib/ai";
-import { featureFlags } from "@/lib/utils";
+import { useState } from "react";
+import { useGoalStore } from "@/store/useGoalStore";
+import { useTaskStore } from "@/store/useTaskStore";
+import { useToast } from "@/context/ToastContext";
+import ProgressBar from "@/components/ProgressBar";
+import { CheckCircle2, Clock, Sparkles, Target, Zap, Plus, ArrowRight, BarChart3, Settings, Bot, CalendarDays } from "lucide-react";
+import Link from "next/link";
+import { motion } from "framer-motion";
 
-const OverviewCharts = dynamic(
-  () => import("@/components/dashboard/overview-charts").then((mod) => mod.OverviewCharts),
-  {
-    ssr: false,
-    loading: () => <div className="surface-card h-[360px] animate-pulse" />
-  }
-);
+export default function DashboardHome() {
+  const { goals } = useGoalStore();
+  const { addTask } = useTaskStore();
+  const { toast } = useToast();
+  const [taskInput, setTaskInput] = useState("");
 
-export default function DashboardPage() {
-  const dueTasks = tasks.filter((task) => task.status !== "DONE").length;
-  const meetings = 3;
-  const briefing = generateFallbackBriefing(tasks, goals, 192);
+  const handleAddTask = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && taskInput.trim()) {
+      addTask(taskInput.trim(), "medium");
+      setTaskInput("");
+      toast("Task added successfully", "success");
+    }
+  };
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 18) return "Good afternoon";
+    return "Good evening";
+  };
+
+  const dayName = new Date().toLocaleDateString("en-US", { weekday: "long" });
+  const quickLinks = [
+    { href: "/dashboard/tasks", label: "Tasks", icon: CheckCircle2 },
+    { href: "/dashboard/goals", label: "Goals", icon: Target },
+    { href: "/dashboard/timer", label: "Pomodoro Timer", icon: Clock },
+    { href: "/dashboard/briefing", label: "Daily Briefing", icon: Sparkles },
+    { href: "/dashboard/calendar", label: "Calendar", icon: CalendarDays },
+    { href: "/dashboard/review", label: "Weekly Review", icon: BarChart3 },
+    { href: "/dashboard/analytics", label: "Analytics", icon: Zap },
+    { href: "/dashboard/ai-chat", label: "AI Chat", icon: Bot },
+    { href: "/dashboard/settings", label: "Settings", icon: Settings },
+  ];
 
   return (
-    <div className="grid gap-6">
-      <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <Badge variant="accent">Today&apos;s summary</Badge>
-                <CardTitle className="mt-4">A sharp plan before the day starts pulling at you</CardTitle>
-              </div>
-              <Sparkles className="h-5 w-5 text-brand-600" />
-            </div>
-          </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-3">
-            <div className="rounded-3xl bg-slate-50 p-5">
-              <p className="text-sm text-slate-500">Tasks due</p>
-              <p className="mt-3 text-4xl font-bold text-slate-950">{dueTasks}</p>
-            </div>
-            <div className="rounded-3xl bg-slate-50 p-5">
-              <p className="text-sm text-slate-500">Meetings today</p>
-              <p className="mt-3 text-4xl font-bold text-slate-950">{meetings}</p>
-            </div>
-            <div className="rounded-3xl bg-brand-50 p-5">
-              <p className="text-sm text-brand-700">{featureFlags.ai ? "AI tip" : "Planning tip"}</p>
-              <p className="mt-3 text-sm font-medium leading-6 text-slate-900">
-                Front-load the planning deck before lunch, then batch admin work into one short sweep.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick add</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="rounded-[28px] border border-slate-200 bg-white px-4 py-5 text-sm text-slate-500">
-              Add task: finish report by Friday
-            </div>
-            <div className="rounded-3xl border border-brand-100 bg-brand-50 p-5 text-sm leading-7 text-slate-700">
-              Natural-language capture turns scattered thoughts into clean task objects with due dates, tags, and
-              urgency.
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+    <div className="space-y-8 pb-12">
+      {/* Header */}
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+        <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+          {getGreeting()} — {dayName}, focus-first.
+        </h1>
+        <p className="text-zinc-500 mt-1">Let's make today count.</p>
+      </motion.div>
 
-      <OverviewCharts />
+      {/* Quick Add Task */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="relative shadow-sm"
+      >
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <Plus className="h-5 w-5 text-zinc-400" />
+        </div>
+        <input
+          type="text"
+          value={taskInput}
+          onChange={(e) => setTaskInput(e.target.value)}
+          onKeyDown={handleAddTask}
+          className="block w-full pl-10 pr-3 py-3 border border-zinc-200 dark:border-zinc-800 rounded-xl leading-5 bg-white dark:bg-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-shadow"
+          placeholder="Add a task… (Press enter to save)"
+        />
+      </motion.div>
 
-      <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
-        <Card>
-          <CardHeader>
-            <CardTitle>AI briefing panel</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {featureFlags.ai ? (
-              <>
-                <div className="rounded-3xl bg-slate-950 p-6 text-white">
-                  <p className="text-sm uppercase tracking-[0.22em] text-slate-400">Morning briefing</p>
-                  <p className="mt-4 text-base leading-8 text-slate-100">{briefing}</p>
-                </div>
-                <div className="grid gap-3 sm:grid-cols-3">
-                  <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <CalendarDays className="h-5 w-5 text-brand-600" />
-                    <p className="mt-3 font-semibold text-slate-950">Calendar intelligence</p>
-                    <p className="mt-2 text-sm text-slate-500">One 90-minute focus block is already protected.</p>
-                  </div>
-                  <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <Target className="h-5 w-5 text-brand-600" />
-                    <p className="mt-3 font-semibold text-slate-950">Goal momentum</p>
-                    <p className="mt-2 text-sm text-slate-500">Your top goal is 72% complete and still on pace.</p>
-                  </div>
-                  <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <Sparkles className="h-5 w-5 text-brand-600" />
-                    <p className="mt-3 font-semibold text-slate-950">Focus tip</p>
-                    <p className="mt-2 text-sm text-slate-500">Do not book over your 2pm sprint unless the issue is real.</p>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <ComingSoonCard
-                badge="AI disabled"
-                description="The briefing, coaching, and planning assistant are hidden until your production AI key is added."
-                details="Set NEXT_PUBLIC_ENABLE_AI=true later to re-enable the assistant sections without changing the code."
-                title="AI briefing is coming soon"
-              />
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Goal progress cards</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {goals.map((goal) => (
-              <div key={goal.id} className="rounded-3xl border border-slate-200 bg-white p-5">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-semibold text-slate-950">{goal.title}</p>
-                    <p className="mt-2 text-sm text-slate-500">{goal.description}</p>
-                  </div>
-                  <Badge variant="secondary">{goal.streak} day streak</Badge>
-                </div>
-                <div className="mt-4 h-3 rounded-full bg-slate-100">
-                  <div
-                    className="h-3 rounded-full bg-gradient-to-r from-brand-500 to-accent-500"
-                    style={{ width: `${goal.progress}%` }}
-                  />
-                </div>
+      <motion.section
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+        className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5"
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-500">Dashboard Pages</h2>
+          <span className="text-xs text-zinc-400">One-click navigation</span>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          {quickLinks.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="flex items-center gap-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2.5 text-sm font-medium text-zinc-700 dark:text-zinc-200 hover:border-blue-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+              >
+                <Icon className="w-4 h-4" />
+                {item.label}
+              </Link>
+            );
+          })}
+        </div>
+      </motion.section>
+
+      {/* AI Briefing Banner */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.2 }}
+        className="bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 rounded-2xl p-6"
+      >
+        <div className="flex items-center gap-2 text-blue-700 dark:text-blue-400 font-semibold mb-4">
+          <Sparkles className="w-5 h-5" />
+          <h2>AI Briefing Ready</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="flex flex-col justify-center">
+            <p className="text-zinc-800 dark:text-zinc-200 leading-relaxed font-medium">
+              Front-load your creative work before noon. FlowMind already protected a 90-minute sprint for your most important goals.
+            </p>
+            <Link href="/dashboard/briefing" className="inline-flex items-center gap-1 text-sm font-semibold text-blue-600 dark:text-blue-500 mt-4 hover:underline">
+              View full briefing <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+          <div className="bg-white/60 dark:bg-zinc-950/40 rounded-xl p-4 space-y-3">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-500">Today's Schedule</h3>
+            <ul className="space-y-2 text-sm text-zinc-700 dark:text-zinc-300">
+              <li className="flex gap-3"><span className="text-zinc-400 font-mono w-10">09:30</span> <span>Deep work sprint</span></li>
+              <li className="flex gap-3"><span className="text-zinc-400 font-mono w-10">12:00</span> <span>Team standup</span></li>
+              <li className="flex gap-3"><span className="text-zinc-400 font-mono w-10">14:00</span> <span>Focus block</span></li>
+              <li className="flex gap-3"><span className="text-zinc-400 font-mono w-10">16:00</span> <span>Daily review</span></li>
+            </ul>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Stats Row */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="grid grid-cols-1 md:grid-cols-3 gap-4"
+      >
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 flex items-start gap-4">
+          <div className="p-3 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-500 rounded-xl"><CheckCircle2 className="w-6 h-6" /></div>
+          <div>
+            <p className="text-zinc-500 text-sm font-medium">Task Completion</p>
+            <p className="text-2xl font-bold flex items-baseline gap-2">78% <span className="text-xs font-medium text-green-500">+12%</span></p>
+          </div>
+        </div>
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 flex items-start gap-4">
+          <div className="p-3 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-500 rounded-xl"><Clock className="w-6 h-6" /></div>
+          <div>
+            <p className="text-zinc-500 text-sm font-medium">Focus Recovered</p>
+            <p className="text-2xl font-bold flex items-baseline gap-2">3.2<span className="text-lg">h</span> <span className="text-xs font-medium text-purple-500">this week</span></p>
+          </div>
+        </div>
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 flex items-start gap-4">
+          <div className="p-3 bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-500 rounded-xl"><Target className="w-6 h-6" /></div>
+          <div>
+            <p className="text-zinc-500 text-sm font-medium">Goals Active</p>
+            <p className="text-2xl font-bold">{goals.length}</p>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Goals in Motion */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6"
+      >
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-lg font-bold flex items-center gap-2"><Zap className="w-5 h-5 text-yellow-500" fill="currentColor" /> Goals in Motion</h2>
+          <Link href="/dashboard/goals" className="text-sm font-medium text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">Manage All</Link>
+        </div>
+        <div className="space-y-6">
+          {goals.map((goal, i) => (
+            <div key={goal.id}>
+              <div className="flex justify-between text-sm font-medium mb-2">
+                <span>{goal.name}</span>
+                <span className="text-zinc-500">{goal.progress}%</span>
               </div>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
+              <ProgressBar progress={goal.progress} color={i === 0 ? "bg-blue-500" : i === 1 ? "bg-emerald-500" : "bg-purple-500"} />
+            </div>
+          ))}
+        </div>
+      </motion.div>
     </div>
   );
 }

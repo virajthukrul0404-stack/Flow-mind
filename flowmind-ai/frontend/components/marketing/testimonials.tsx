@@ -1,12 +1,21 @@
+"use client";
+
 import { Star } from "lucide-react";
 
 import { testimonials } from "@/lib/data/mock-data";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { Card, CardContent } from "@/components/ui/card";
 
+import { motion } from "framer-motion";
+
 export function TestimonialsSection() {
   return (
-    <section className="container-shell py-20">
+    <motion.section 
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.1 }}
+      className="container-shell py-20"
+    >
       <SectionHeading
         description="Founders, operators, and managers use FlowMind to keep priorities visible and execution sane."
         eyebrow="Testimonials"
@@ -35,8 +44,8 @@ export function TestimonialsSection() {
           </Card>
         ))}
       </div>
-      <div className="mt-10 overflow-hidden md:hidden">
-        <div className="flex w-[200%] gap-4 animate-marquee">
+      <div className="mt-10 overflow-hidden md:hidden relative group">
+        <div className="flex w-[200%] gap-4 animate-marquee hover:[animation-play-state:paused]">
           {[...testimonials, ...testimonials].map((testimonial, index) => (
             <Card key={`${testimonial.name}-${index}`} className="w-[18rem] shrink-0">
               <CardContent className="space-y-4 p-6">
@@ -54,6 +63,6 @@ export function TestimonialsSection() {
           ))}
         </div>
       </div>
-    </section>
+    </motion.section>
   );
 }

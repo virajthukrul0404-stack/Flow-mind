@@ -2,6 +2,8 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
+import { ToastProvider } from "@/context/ToastContext";
+import { TimerEngine } from "@/components/providers/timer-engine";
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -16,5 +18,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       })
   );
 
-  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ToastProvider>
+        <TimerEngine />
+        {children}
+      </ToastProvider>
+    </QueryClientProvider>
+  );
 }

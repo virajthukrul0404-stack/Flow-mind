@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 import { faqItems } from "@/lib/data/mock-data";
 import { SectionHeading } from "@/components/shared/section-heading";
@@ -12,7 +13,12 @@ export function FaqSection() {
   const [open, setOpen] = useState<number>(0);
 
   return (
-    <section className="container-shell py-20">
+    <motion.section 
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
+      className="container-shell py-20"
+    >
       <SectionHeading
         description="Everything you need to know before putting FlowMind into your weekly workflow."
         eyebrow="FAQ"
@@ -31,11 +37,22 @@ export function FaqSection() {
                 <span className="text-base font-semibold text-slate-950">{item.question}</span>
                 <ChevronDown className={cn("h-5 w-5 text-slate-500 transition-transform", active ? "rotate-180" : "")} />
               </button>
-              {active ? <div className="px-6 pb-6 text-sm leading-7 text-slate-600">{item.answer}</div> : null}
+              <AnimatePresence>
+                {active && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="px-6 pb-6 text-sm leading-7 text-slate-600">{item.answer}</div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </Card>
           );
         })}
       </div>
-    </section>
+    </motion.section>
   );
 }

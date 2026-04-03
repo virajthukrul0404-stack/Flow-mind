@@ -37,6 +37,14 @@ export function ChatPanel() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
+  function normalizeErrorText(raw: string) {
+    const looksLikeHtml = /<!doctype html>|<html|__NEXT_DATA__|next-error-h1/i.test(raw);
+    if (looksLikeHtml) {
+      return "The AI service hit a server error. Please try again in a moment.";
+    }
+    return raw.length > 400 ? `${raw.slice(0, 400)}...` : raw;
+  }
+
   async function sendMessage(nextMessage?: string) {
     const content = (nextMessage ?? input).trim();
     if (!content || loading) {
@@ -112,7 +120,9 @@ export function ChatPanel() {
         }
       }
     } catch (error) {
-      const errorText = error instanceof Error ? error.message : "AI chat failed unexpectedly.";
+      const errorText = normalizeErrorText(
+        error instanceof Error ? error.message : "AI chat failed unexpectedly."
+      );
       setMessages((current) =>
         current.map((message) =>
           message.id === assistantId
@@ -163,9 +173,13 @@ export function ChatPanel() {
             {messages.map((message) => (
               <div
                 key={message.id}
-                className={`max-w-3xl rounded-[24px] px-4 py-3 ${message.role === "assistant" ? "bg-white text-slate-800" : "ml-auto bg-slate-950 text-white"}`}
+                className={`max-w-3xl rounded-[24px] px-4 py-3 shadow-sm ${
+                  message.role === "assistant" ? "bg-white text-slate-800" : "ml-auto bg-slate-950 text-white"
+                }`}
               >
-                <div className="whitespace-pre-wrap leading-7">{message.content || (loading ? "Thinking..." : "")}</div>
+                <div className="whitespace-pre-wrap break-words leading-7">
+                  {message.content || (loading ? "Thinking..." : "")}
+                </div>
                 <div className={`mt-3 text-xs ${message.role === "assistant" ? "text-slate-400" : "text-slate-300"}`}>
                   {formatTimeLabel(message.createdAt)}
                 </div>

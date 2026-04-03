@@ -10,6 +10,7 @@ backend/node_modules
 # Environment variables - never commit these
 .env
 .env.local
+.env.vercel
 .env.production
 .env.production.local
 .env.development.local
@@ -21,3 +22,9 @@ backend/.env.local
 
 # Vercel
 .vercel
+
+# local build artifacts
+frontend/build.log
+frontend/build-utf8.log
+frontend/typescript-errors.txt
+frontend/*.tsbuildinfo

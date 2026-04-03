@@ -11,11 +11,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+import { AnimatePresence, motion } from "framer-motion";
+
 export function PricingSection() {
   const [annual, setAnnual] = useState(false);
 
   return (
-    <section className="container-shell py-20">
+    <motion.section 
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
+      className="container-shell py-20"
+    >
       <SectionHeading
         description="Simple pricing with room to grow from solo workflows to collaborative planning."
         eyebrow="Pricing"
@@ -66,8 +73,19 @@ export function PricingSection() {
                   <CardTitle>{plan.name}</CardTitle>
                   <p className="mt-3 text-sm leading-7 text-slate-600">{plan.description}</p>
                 </div>
-                <div className="flex items-end gap-2">
-                  <span className="text-5xl font-bold text-slate-950">${price}</span>
+                <div className="flex items-end gap-2 relative h-16">
+                  <AnimatePresence mode="popLayout">
+                    <motion.span
+                      key={annual ? "annual" : "monthly"}
+                      initial={{ rotateX: 90, opacity: 0 }}
+                      animate={{ rotateX: 0, opacity: 1 }}
+                      exit={{ rotateX: -90, opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="text-5xl font-bold text-slate-950 origin-bottom"
+                    >
+                      ${price}
+                    </motion.span>
+                  </AnimatePresence>
                   <span className="pb-2 text-sm text-slate-500">{plan.periodLabel}</span>
                 </div>
               </CardHeader>
@@ -90,6 +108,6 @@ export function PricingSection() {
           );
         })}
       </div>
-    </section>
+    </motion.section>
   );
 }

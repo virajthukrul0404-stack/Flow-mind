@@ -1,7 +1,7 @@
 import { addDays, nextFriday, nextMonday, startOfHour } from "date-fns";
 import OpenAI from "openai";
 
-import type { ChatMessage, Goal, Task, TaskPriority } from "@/lib/types";
+import type { ChatMessage, Goal, Task, TaskPriority } from "./types";
 
 export const TASK_PARSE_PROMPT = `
 Parse this natural language input into a task object.

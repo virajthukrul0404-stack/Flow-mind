@@ -20,18 +20,14 @@ Return JSON array: [{ title, order, estimatedDays }]
 `;
 
 function getAiConfig() {
-  const explicitGroqKey = process.env.GROQ_API_KEY;
-  const sharedKey = process.env.OPENAI_API_KEY;
-  const apiKey = explicitGroqKey || sharedKey;
+  const apiKey = process.env.GROQ_API_KEY;
 
   if (!apiKey) {
     return null;
   }
 
-  const keyLooksLikeGroq = apiKey.startsWith("gsk_");
-  const baseURL = process.env.OPENAI_BASE_URL || (keyLooksLikeGroq ? "https://api.groq.com/openai/v1" : undefined);
-  const model =
-    process.env.OPENAI_MODEL || (keyLooksLikeGroq ? "llama-3.3-70b-versatile" : "gpt-4o");
+  const baseURL = process.env.GROQ_BASE_URL || "https://api.groq.com/openai/v1";
+  const model = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
 
   return { apiKey, baseURL, model };
 }
