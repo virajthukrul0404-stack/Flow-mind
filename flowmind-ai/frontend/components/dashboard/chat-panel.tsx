@@ -37,6 +37,14 @@ export function ChatPanel() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
+  function normalizeErrorText(raw: string) {
+    const looksLikeHtml = /<!doctype html>|<html|__NEXT_DATA__|next-error-h1/i.test(raw);
+    if (looksLikeHtml) {
+      return "The AI service hit a server error. Please try again in a moment.";
+    }
+    return raw.length > 400 ? `${raw.slice(0, 400)}...` : raw;
+  }
+
   async function sendMessage(nextMessage?: string) {
     const content = (nextMessage ?? input).trim();
     if (!content || loading) {
@@ -80,6 +88,12 @@ export function ChatPanel() {
         })
       });
 
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+        const message = payload?.error || "AI chat is unavailable right now. Please try again.";
+        throw new Error(message);
+      }
+
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
 
@@ -105,6 +119,21 @@ export function ChatPanel() {
           );
         }
       }
+    } catch (error) {
+      const errorText = normalizeErrorText(
+        error instanceof Error ? error.message : "AI chat failed unexpectedly."
+      );
+      setMessages((current) =>
+        current.map((message) =>
+          message.id === assistantId
+            ? {
+                ...message,
+                content: errorText,
+                actions: ["Try Again"]
+              }
+            : message
+        )
+      );
     } finally {
       setLoading(false);
     }
